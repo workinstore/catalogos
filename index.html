@@ -299,7 +299,7 @@ async function buscarArquivosGitHub(inputUrl) {
         throw new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
     }
 
-    // Filtra arquivos, remove subpastas e ignora o próprio index.html (ignorando maiúsculas/minúsculas)
+    // Filtra arquivos, remove subpastas e ignora o próprio index.html
     const arquivos = items
         .filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html')
         .map(item => {
@@ -496,7 +496,7 @@ function renderizarPaginacao() {
 
 function filtrarEExibir() {
     const termo = document.getElementById('searchInput').value.toLowerCase();
-    arquivosFiltrਣdos = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
     paginaAtual = 1;
     renderizar();
 }
