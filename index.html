@@ -299,7 +299,6 @@ async function buscarArquivosGitHub(inputUrl) {
         throw new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
     }
 
-    // Filtra arquivos, remove subpastas e ignora o próprio index.html
     const arquivos = items
         .filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html')
         .map(item => {
@@ -412,6 +411,7 @@ function gerarEBaixarArquivoHtml(arquivos) {
         .page-btn { padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: background 0.2s; }
         .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-ellipsis { padding: 0.4rem 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
         .no-results { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem; }
     </style>
 </head>
@@ -471,6 +471,7 @@ function renderizarPaginacao() {
 
     if (totalPaginas <= 1) return;
 
+    // Botão Anterior
     const btnAnterior = document.createElement('button');
     btnAnterior.className = 'page-btn';
     btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
@@ -478,14 +479,53 @@ function renderizarPaginacao() {
     btnAnterior.onclick = () => { if (paginaAtual > 1) { paginaAtual--; renderizar(); } };
     paginacaoDiv.appendChild(btnAnterior);
 
-    for (let i = 1; i <= totalPaginas; i++) {
-        const btn = document.createElement('button');
-        btn.className = \`page-btn \${i === paginaAtual ? 'active' : ''}\`;
-        btn.innerText = i;
-        btn.onclick = () => { paginaAtual = i; renderizar(); };
-        paginacaoDiv.appendChild(btn);
+    // Lógica de paginação compacta com reticências se houver muitas páginas
+    let paginasParaMostrar = [];
+    if (totalPaginas <= 10) {
+        for (let i = 1; i <= totalPaginas; i++) paginasParaMostrar.push(i);
+    } else {
+        paginasParaMostrar.push(1);
+        let inicioJanela = Math.max(2, paginaAtual - 2);
+        let fimJanela = Math.min(totalPaginas - 1, paginaAtual + 2);
+
+        if (paginaAtual <= 4) {
+            fimJanela = Math.min(totalPaginas - 1, 8);
+        }
+        if (paginaAtual >= totalPaginas - 3) {
+            inicioJanela = Math.max(2, totalPaginas - 7);
+        }
+
+        if (inicioJanela > 2) {
+            paginasParaMostrar.push('...');
+        }
+
+        for (let i = inicioJanela; i <= fimJanela; i++) {
+            paginasParaMostrar.push(i);
+        }
+
+        if (fimJanela < totalPaginas - 1) {
+            paginasParaMostrar.push('...');
+        }
+
+        paginasParaMostrar.push(totalPaginas);
     }
 
+    paginasParaMostrar.forEach(p => {
+        if (p === '...') {
+            const span = document.createElement('span');
+            span.className = 'page-ellipsis';
+            span.innerText = '...';
+            paginacaoDiv.appendChild(span);
+        } else {
+            const btn = document.createElement('button');
+            btn.className = \`page-btn \${p === paginaAtual ? 'active' : ''}\`;
+            btn.innerText = p;
+            btn.onclick = () => { paginaAtual = p; renderizar(); };
+            paginacaoDiv.appendChild(btn);
+        }
+    });
+
+    // Botão Próximo
     const btnProximo = document.createElement('button');
     btnProximo.className = 'page-btn';
     btnProximo.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
