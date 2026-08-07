@@ -269,9 +269,7 @@
 </div>
 
 <script>
-// Transforma link do github comum em URL da API do GitHub para varredura automática
 function converterParaApiGithub(url) {
-    // Exemplo: https://github.com/usuario/repo/tree/main/pasta
     const regex = /github\.com\/([^\/]+)\/([^\/]+)\/(?:tree|blob)\/([^\/]+)\/(.+)?/;
     const match = url.match(regex);
     
@@ -298,12 +296,12 @@ async function buscarArquivosGitHub(inputUrl) {
 
     const items = await response.json();
     if (!Array.isArray(items)) {
-        throw o = new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
+        throw new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
     }
 
-    // Filtra apenas arquivos (ignora subpastas)
+    // Filtra arquivos, remove subpastas e ignora o próprio index.html (ignorando maiúsculas/minúsculas)
     const arquivos = items
-        .filter(item => item.type === 'file')
+        .filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html')
         .map(item => {
             const fullName = item.name;
             const lastDotIndex = fullName.lastIndexOf('.');
@@ -332,7 +330,7 @@ async function processarEGerar() {
         const arquivos = await buscarArquivosGitHub(sourceUrlInput);
 
         if (arquivos.length === 0) {
-            throw new Error('Nenhum arquivo encontrado nesta pasta.');
+            throw new Error('Nenhum arquivo válido encontrado nesta pasta (ou apenas o index.html estava presente).');
         }
 
         let customDomain = document.getElementById('customDomain').value.trim().replace(/\/+$/, '');
@@ -362,7 +360,7 @@ function atualizarPreview(arquivos) {
     const container = document.getElementById('previewContainer');
     container.innerHTML = `
         <div style="font-size: 0.85rem; color: #10b981; margin-bottom: 1rem; font-weight: 500;">
-            <i class="fa-solid fa-circle-check"></i> Sucesso! ${arquivos.length} arquivo(s) catalogado(s) automaticamente.
+            <i class="fa-solid fa-circle-check"></i> Sucesso! ${arquivos.length} arquivo(s) catalogado(s) automaticamente (index.html ignorado).
         </div>
         <ul class="file-list" style="max-height: 220px; overflow-y: auto;">
             ${arquivos.map(a => `
@@ -498,7 +496,7 @@ function renderizarPaginacao() {
 
 function filtrarEExibir() {
     const termo = document.getElementById('searchInput').value.toLowerCase();
-    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    arquivosFiltrਣdos = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
     paginaAtual = 1;
     renderizar();
 }
