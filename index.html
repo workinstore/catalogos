@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Catálogo de Arquivos</title>
-    <!-- Google Fonts & FontAwesome para um visual limpo e profissional -->
+    <title>Gerador Automático de Catálogo de Arquivos</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -45,7 +44,7 @@
         }
 
         header h1 {
-            font-size: 2rem;
+            font-size: 1.75rem;
             color: var(--text-main);
             font-weight: 700;
             margin-bottom: 0.5rem;
@@ -53,15 +52,15 @@
 
         header p {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             margin-bottom: 2rem;
         }
 
@@ -81,39 +80,36 @@
             color: var(--text-muted);
         }
 
-        input[type="text"], textarea {
+        input[type="text"] {
             width: 100%;
             padding: 0.75rem 1rem;
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 0.95rem;
             color: var(--text-main);
-            transition: all 0.2s;
             outline: none;
+            transition: all 0.2s;
         }
 
-        input[type="text"]:focus, textarea:focus {
+        input[type="text"]:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 120px;
         }
 
         .radio-group {
             display: flex;
             gap: 1.5rem;
             margin-top: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .radio-label {
             display: flex;
             align-items: center;
-            gap: 0.5Rem;
+            gap: 0.5rem;
             cursor: pointer;
             font-weight: 400;
+            font-size: 0.9rem;
         }
 
         .btn {
@@ -125,7 +121,7 @@
             color: white;
             border: none;
             border-radius: 8px;
-            padding: 0.75rem 1.5rem;
+            padding: 0.85rem 1.5rem;
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
@@ -141,6 +137,11 @@
             transform: scale(0.98);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .preview-section {
             border-top: 2px dashed var(--border);
             padding-top: 2rem;
@@ -148,7 +149,7 @@
         }
 
         .preview-title {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 600;
             margin-bottom: 1rem;
             display: flex;
@@ -156,24 +157,18 @@
             gap: 0.5rem;
         }
 
-        /* Estilos embutidos para simular a página gerada */
         .catalog-container {
             background: #fff;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 1.5rem;
-        }
-
-        .catalog-search {
-            margin-bottom: 1.5rem;
+            padding: 1.25rem;
         }
 
         .file-list {
             list-style: none;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 0.75rem;
-            margin-bottom: 1.5rem;
         }
 
         .file-item {
@@ -183,12 +178,6 @@
             padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            transition: border-color 0.2s;
-        }
-
-        .file-item:hover {
-            border-color: var(--primary);
         }
 
         .file-link {
@@ -196,45 +185,18 @@
             text-decoration: none;
             font-weight: 500;
             font-size: 0.9rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .file-link i {
             color: var(--primary);
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .page-btn {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--border);
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .page-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+            flex-shrink: 0;
         }
 
         .helper-text {
@@ -242,28 +204,40 @@
             color: var(--text-muted);
             margin-top: 0.25rem;
         }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Gerador de Catálogo</h1>
-        <p>Crie páginas de listagem limpas e profissionais para seus arquivos hospedados.</p>
+        <h1>Gerador Automático de Catálogo</h1>
+        <p>Cole o link do repositório e gere seu index.html instantaneamente.</p>
     </header>
 
     <div class="card">
-        <form id="generatorForm" onsubmit="event.preventDefault(); gerarCatalogo();">
+        <div id="alertBox" class="alert"></div>
+        
+        <form id="generatorForm" onsubmit="event.preventDefault(); processarEGerar();">
             <div class="form-group">
-                <label for="sourceUrl">Link de Origem dos Arquivos <span>(Onde os arquivos estão fisicamente)</span></label>
-                <input type="text" id="sourceUrl" placeholder="Ex: https://raw.githubusercontent.com/usuario/repo/main/diretorio" required>
-                <div class="helper-text">URL base crua (raw) de onde o site buscará os arquivos para download.</div>
+                <label for="sourceUrl">Link de Origem (Repositório GitHub ou Pasta) <span>*</span></label>
+                <input type="text" id="sourceUrl" placeholder="Ex: https://github.com/usuario/repositorio/tree/main/diretorio" required>
+                <div class="helper-text">Insira o link normal da pasta no GitHub. O sistema extrairá os arquivos sozinho.</div>
             </div>
 
             <div class="form-group">
                 <label for="customDomain">Link Base de Exibição <span>(Opcional)</span></label>
-                <input type="text" id="customDomain" placeholder="Ex: https://repositorio.meusite.org/diretorio ou https://usuario.github.io/repo/dir">
-                <div class="helper-text">Se vazio, usará automaticamente o link de origem informado acima.</div>
+                <input type="text" id="customDomain" placeholder="Ex: https://repositorio.meusite.org/diretorio">
+                <div class="helper-text">Se preenchido, os links do catálogo apontarão para o seu domínio próprio.</div>
             </div>
 
             <div class="form-group">
@@ -278,62 +252,129 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="fileNames">Lista de Arquivos <span>(Cole os nomes com extensões, um por linha)</span></label>
-                <textarea id="fileNames" placeholder="imagem1.jpg&#10;documento.pdf&#10;video_aula.mp4" required></textarea>
-            </div>
-
-            <button type="button" class="btn" onclick="gerarCatalogo()">
-                <i class="fa-solid fa-code"></i> Gerar e Baixar index.html
+            <button type="submit" id="btnGerar" class="btn">
+                <i class="fa-solid fa-bolt"></i> Varrer Pasta e Baixar index.html
             </button>
         </form>
     </div>
 
     <div class="preview-section">
         <div class="preview-title">
-            <i class="fa-solid fa-eye" style="color: var(--primary);"></i> Pré-visualização ao vivo
+            <i class="fa-solid fa-eye" style="color: var(--primary);"></i> Pré-visualização Automática
         </div>
         <div class="catalog-container" id="previewContainer">
-            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Preencha o formulário acima para visualizar o catálogo.</p>
+            <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">Insira o link acima para buscar os arquivos automaticamente.</p>
         </div>
     </div>
 </div>
 
 <script>
-function processarDados() {
-    const sourceUrl = document.getElementById('sourceUrl').value.trim().replace(/\/+$/, '');
-    let customDomain = document.getElementById('customDomain').value.trim().replace(/\/+$/, '');
-    const baseLink = customDomain !== '' ? customDomain : sourceUrl;
-    const downloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
+// Transforma link do github comum em URL da API do GitHub para varredura automática
+function converterParaApiGithub(url) {
+    // Exemplo: https://github.com/usuario/repo/tree/main/pasta
+    const regex = /github\.com\/([^\/]+)\/([^\/]+)\/(?:tree|blob)\/([^\/]+)\/(.+)?/;
+    const match = url.match(regex);
     
-    const rawText = document.getElementById('fileNames').value;
-    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
-    const arquivos = lines.map(fullName => {
-        // Remove a extensão para exibição
-        const lastDotIndex = fullName.lastIndexOf('.');
-        const displayName = lastDotIndex !== -1 ? fullName.substring(0, lastDotIndex) : fullName;
-        
+    if (match) {
+        const [, usuario, repo, branch, caminho = ''] = match;
         return {
-            fullName: fullName,
-            displayName: displayName,
-            sourceFileUrl: `${sourceUrl}/${encodeURIComponent(fullName)}`,
-            displayFileUrl: `${baseLink}/${encodeURIComponent(fullName)}`,
-            downloadAttr: downloadMode === 'download' ? 'download' : ''
+            api: `https://api.github.com/repos/${usuario}/${repo}/contents/${caminho}?ref=${branch}`,
+            rawBase: `https://raw.githubusercontent.com/${usuario}/${repo}/${branch}/${caminho}`
         };
-    });
+    }
+    return null;
+}
+
+async function buscarArquivosGitHub(inputUrl) {
+    const dadosRepo = converterParaApiGithub(inputUrl);
+    if (!dadosRepo) {
+        throw new Error('Formato de link do GitHub inválido. Certifique-se de colar o link completo da pasta.');
+    }
+
+    const response = await fetch(dadosRepo.api);
+    if (!response.ok) {
+        throw new Error('Não foi possível acessar a API do GitHub. Verifique se o repositório é público ou se o link está correto.');
+    }
+
+    const items = await response.json();
+    if (!Array.isArray(items)) {
+        throw o = new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
+    }
+
+    // Filtra apenas arquivos (ignora subpastas)
+    const arquivos = items
+        .filter(item => item.type === 'file')
+        .map(item => {
+            const fullName = item.name;
+            const lastDotIndex = fullName.lastIndexOf('.');
+            const displayName = lastDotIndex !== -1 ? fullName.substring(0, lastDotIndex) : fullName;
+            
+            return {
+                fullName: fullName,
+                displayName: displayName,
+                sourceFileUrl: item.download_url,
+                rawBase: dadosRepo.rawBase
+            };
+        });
 
     return arquivos;
 }
 
-function gerarCatalogo() {
-    const arquivos = processarDados();
-    if (arquivos.length === 0) {
-        alert('Por favor, adicione pelo menos um arquivo na lista.');
-        return;
-    }
+async function processarEGerar() {
+    const alertBox = document.getElementById('alertBox');
+    const btnGerar = document.getElementById('btnGerar');
+    alertBox.style.display = 'none';
+    btnGerar.disabled = true;
+    btnGerar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo arquivos do repositório...';
 
-    // Template HTML final que será embutido no arquivo index.html baixado
+    try {
+        const sourceUrlInput = document.getElementById('sourceUrl').value.trim().replace(/\/+$/, '');
+        const arquivos = await buscarArquivosGitHub(sourceUrlInput);
+
+        if (arquivos.length === 0) {
+            throw new Error('Nenhum arquivo encontrado nesta pasta.');
+        }
+
+        let customDomain = document.getElementById('customDomain').value.trim().replace(/\/+$/, '');
+        const baseLink = customDomain !== '' ? customDomain : arquivos[0].rawBase;
+        const downloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
+
+        const arquivosFormatados = arquivos.map(arq => ({
+            fullName: arq.fullName,
+            displayName: arq.displayName,
+            displayFileUrl: `${baseLink}/${encodeURIComponent(arq.fullName)}`,
+            downloadAttr: downloadMode === 'download' ? 'download' : ''
+        }));
+
+        atualizarPreview(arquivosFormatados);
+        gerarEBaixarArquivoHtml(arquivosFormatados);
+
+    } catch (error) {
+        alertBox.innerText = error.message;
+        alertBox.style.display = 'block';
+    } finally {
+        btnGerar.disabled = false;
+        btnGerar.innerHTML = '<i class="fa-solid fa-bolt"></i> Varrer Pasta e Baixar index.html';
+    }
+}
+
+function atualizarPreview(arquivos) {
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = `
+        <div style="font-size: 0.85rem; color: #10b981; margin-bottom: 1rem; font-weight: 500;">
+            <i class="fa-solid fa-circle-check"></i> Sucesso! ${arquivos.length} arquivo(s) catalogado(s) automaticamente.
+        </div>
+        <ul class="file-list" style="max-height: 220px; overflow-y: auto;">
+            ${arquivos.map(a => `
+                <li class="file-item">
+                    <span class="file-link"><i class="fa-regular fa-file-lines"></i> ${a.displayName}</span>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+}
+
+function gerarEBaixarArquivoHtml(arquivos) {
     const htmlTemplate = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -444,7 +485,7 @@ function renderizarPaginacao() {
         btn.className = \`page-btn \${i === paginaAtual ? 'active' : ''}\`;
         btn.innerText = i;
         btn.onclick = () => { paginaAtual = i; renderizar(); };
-        paginacaoDiv.appendChild(btn.value = i, paginacaoDiv.appendChild(btn));
+        paginacaoDiv.appendChild(btn);
     }
 
     const btnProximo = document.createElement('button');
@@ -467,7 +508,6 @@ renderizar();
 </body>
 </html>`;
 
-    // Cria o download automático do arquivo index.html gerado
     const blob = new Blob([htmlTemplate], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -478,33 +518,6 @@ renderizar();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-
-// Atualiza a pré-visualização em tempo real enquanto o usuário digita
-document.getElementById('generatorForm').addEventListener('input', () => {
-    try {
-        const arquivos = processarDados();
-        const container = document.getElementById('previewContainer');
-        if (arquivos.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Adicione arquivos para pré-visualizar.</p>';
-            return;
-        }
-        
-        // Renderiza uma pré-visualização simplificada no painel
-        container.innerHTML = `
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> \${arquivos.length} arquivo(s) mapeado(s) pronto(s) para gerar o <strong>index.html</strong>.
-            </div>
-            <ul class="file-list" style="max-height: 200px; overflow-y: auto;">
-                \${arquivos.slice(0, 5).map(a => \`
-                    <li class="file-item">
-                        <span class="file-link"><i class="fa-regular fa-file-lines"></i> \${a.displayName}</span>
-                    </li>
-                \`).join('')}
-                \${arquivos.length > 5 ? \`<li style="grid-column: 1/-1; text-align: center; font-size: 0.85rem; color: var(--text-muted);">...e mais \${arquivos.length - 5} arquivos.</li>\` : ''}
-            </ul>
-        `;
-    } catch(e) {}
-});
 </script>
 
 </body>
