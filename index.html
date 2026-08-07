@@ -231,12 +231,12 @@
             <div class="form-group">
                 <label for="sourceUrl">Link de Origem (Repositório GitHub ou Pasta) <span>*</span></label>
                 <input type="text" id="sourceUrl" placeholder="Ex: https://github.com/usuario/repositorio/tree/main/diretorio" required>
-                <div class="helper-text">Insira o link normal da pasta no GitHub. O sistema extrairá os arquivos sozinho.</div>
+                <div class="helper-text">Insira o link da pasta ou repositório no GitHub. O sistema varrerá tudo (inclusive subpastas).</div>
             </div>
 
             <div class="form-group">
                 <label for="customDomain">Link Base de Exibição <span>(Opcional)</span></label>
-                <input type="text" id="customDomain" placeholder="Ex: https://repositorio.meusite.org/diretorio">
+                <input type="text" id="customDomain" placeholder="Ex: https://repositorio.meusite.org">
                 <div class="helper-text">Se preenchido, os links do catálogo apontarão para o seu domínio próprio.</div>
             </div>
 
@@ -253,7 +253,7 @@
             </div>
 
             <button type="submit" id="btnGerar" class="btn">
-                <i class="fa-solid fa-bolt"></i> Varrer Pasta e Baixar index.html
+                <i class="fa-solid fa-bolt"></i> Varrer Repositório e Baixar index.html
             </button>
         </form>
     </div>
@@ -269,52 +269,87 @@
 </div>
 
 <script>
-function converterParaApiGithub(url) {
+function analisarUrlGithub(url) {
     const regex = /github\.com\/([^\/]+)\/([^\/]+)\/(?:tree|blob)\/([^\/]+)\/(.+)?/;
     const match = url.match(regex);
     
     if (match) {
         const [, usuario, repo, branch, caminho = ''] = match;
-        return {
-            api: `https://api.github.com/repos/${usuario}/${repo}/contents/${caminho}?ref=${branch}`,
-            rawBase: `https://raw.githubusercontent.com/${usuario}/${repo}/${branch}/${caminho}`
-        };
+        return { usuario, repo, branch, caminho: caminho.replace(/\/+$/, '') };
     }
+    
+    // Caso seja apenas a raiz do repositório (ex: https://github.com/usuario/repo)
+    const regexSimples = /github\.com\/([^\/]+)\/([^\/]+)(?:\/)?$/;
+    const matchSimples = url.match(regexSimples);
+    if (matchSimples) {
+        const [, usuario, repo] = matchSimples;
+        return { usuario, repo, branch: 'main', caminho: '' };
+    }
+    
     return null;
 }
 
 async function buscarArquivosGitHub(inputUrl) {
-    const dadosRepo = converterParaApiGithub(inputUrl);
-    if (!dadosRepo) {
-        throw new Error('Formato de link do GitHub inválido. Certifique-se de colar o link completo da pasta.');
+    const dados = analisarUrlGithub(inputUrl);
+    if (!dados) {
+        throw new Error('Formato de link do GitHub inválido. Certifique-se de colar o link correto.');
     }
 
-    const response = await fetch(dadosRepo.api);
+    // Tenta primeiro descobrir a branch principal caso venha genérico ou "main" falhe
+    let branchUtilizada = dados.branch;
+    let urlTree = `https://api.github.com/repos/${dados.usuario}/${dados.repo}/git/trees/${branchUtilizada}?recursive=1`;
+    
+    let response = await fetch(urlTree);
+    if (!response.ok && branchUtilizada === 'main') {
+        // Tenta com 'master' se 'main' falhar
+        branchUtilizada = 'master';
+        urlTree = `https://api.github.com/repos/${dados.usuario}/${dados.repo}/git/trees/${branchUtilizada}?recursive=1`;
+        response = await fetch(urlTree);
+    }
+
     if (!response.ok) {
-        throw new Error('Não foi possível acessar a API do GitHub. Verifique se o repositório é público ou se o link está correto.');
+        throw new Error('Não foi possível acessar a árvore do repositório. Verifique se ele é público e se o link está correto.');
     }
 
-    const items = await response.json();
-    if (!Array.isArray(items)) {
-        throw new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
+    const data = await response.json();
+    if (!data.tree || !Array.isArray(data.tree)) {
+        throw new Error('A resposta da API do GitHub não retornou uma estrutura de árvore válida.');
     }
 
-    const arquivos = items
-        .filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html')
-        .map(item => {
-            const fullName = item.name;
-            const lastDotIndex = fullName.lastIndexOf('.');
-            const displayName = lastDotIndex !== -1 ? fullName.substring(0, lastDotIndex) : fullName;
+    const rawBase = `https://raw.githubusercontent.com/${dados.usuario}/${dados.repo}/${branchUtilizada}`;
+
+    // Filtra apenas blobs (arquivos), aplica o filtro de subpasta se houver e remove o index.html
+    const arquivos = data.tree
+        .filter(item => {
+            if (item.type !== 'blob') return false;
+            if (item.path.toLowerCase() === 'index.html' || item.path.toLowerCase().endsWith('/index.html')) return false;
             
+            // Se o usuário especificou uma subpasta na URL, filtra apenas o que está dentro dela
+            if (dados.caminho) {
+                return item.path.startsWith(dados.caminho + '/');
+            }
+            return true;
+        })
+        .map(item => {
+            // Se foi filtrado por subpasta, remove o prefixo da subpasta para o nome exibido se preferir, ou mantém o caminho relativo
+            let caminhoRelativo = item.path;
+            if (dados.caminho && caminhoRelativo.startsWith(dados.caminho + '/')) {
+                caminhoRelativo = caminhoRelativo.substring(dados.caminho.length + 1);
+            }
+
+            const nomeArquivo = caminhoRelativo.split('/').pop();
+            const lastDotIndex = nomeArquivo.lastIndexOf('.');
+            const displayName = lastDotIndex !== -1 ? nomeArquivo.substring(0, lastDotIndex) : nomeArquivo;
+
             return {
-                fullName: fullName,
+                fullName: caminhoRelativo,
+                pathCompleto: item.path,
                 displayName: displayName,
-                sourceFileUrl: item.download_url,
-                rawBase: dadosRepo.rawBase
+                rawBase: rawBase
             };
         });
 
-    return arquivos;
+    return { arquivos, rawBase, caminhoSubpasta: dados.caminho };
 }
 
 async function processarEGerar() {
@@ -322,36 +357,49 @@ async function processarEGerar() {
     const btnGerar = document.getElementById('btnGerar');
     alertBox.style.display = 'none';
     btnGerar.disabled = true;
-    btnGerar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo arquivos do repositório...';
+    btnGerar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo árvore completa do repositório...';
 
     try {
         const sourceUrlInput = document.getElementById('sourceUrl').value.trim().replace(/\/+$/, '');
-        const arquivos = await buscarArquivosGitHub(sourceUrlInput);
+        const resultadoBusca = await buscarArquivosGitHub(sourceUrlInput);
+        const arquivos = resultadoBusca.arquivos;
 
         if (arquivos.length === 0) {
-            throw new Error('Nenhum arquivo válido encontrado nesta pasta (ou apenas o index.html estava presente).');
+            throw new Error('Nenhum arquivo válido encontrado neste repositório/pasta.');
         }
 
         let customDomain = document.getElementById('customDomain').value.trim().replace(/\/+$/, '');
-        const baseLink = customDomain !== '' ? customDomain : arquivos[0].rawBase;
         const downloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
 
-        const arquivosFormatados = arquivos.map(arq => ({
+        const arquivosFormatados = arquivos.map(arq => {
+            const caminhoFinalUrl = resultadoBusca.caminhoSubpasta ? `${resultadoBusca.caminhoSubpasta}/${arq.fullName}` : arq.pathCompleto;
+            const baseLink = customDomain !== '' ? customDomain : arq.rawBase;
+            
+            return {
+                fullName: arq.fullName,
+                displayName: `${arq.fullName} (${arq.displayName})`, // Mantém o nome amigável limpo ou ajustado
+                displayFileUrl: `${baseLink}/${caminhoFinalUrl.split('/').map(encodeURIComponent).join('/')}`,
+                downloadAttr: downloadMode === 'download' ? 'download' : ''
+            };
+        });
+
+        // Refinando displayName para mostrar apenas o nome limpo sem extensão na listagem principal
+        const arquivosCompletosProntos = arquivos.map((arq, index) => ({
             fullName: arq.fullName,
             displayName: arq.displayName,
-            displayFileUrl: `${baseLink}/${encodeURIComponent(arq.fullName)}`,
-            downloadAttr: downloadMode === 'download' ? 'download' : ''
+            displayFileUrl: arquivosFormatados[index].displayFileUrl,
+            downloadAttr: arquivosFormatados[index].downloadAttr
         }));
 
-        atualizarPreview(arquivosFormatados);
-        gerarEBaixarArquivoHtml(arquivosFormatados);
+        atualizarPreview(arquivosCompletosProntos);
+        gerarEBaixarArquivoHtml(arquivosCompletosProntos);
 
     } catch (error) {
         alertBox.innerText = error.message;
         alertBox.style.display = 'block';
     } finally {
         btnGerar.disabled = false;
-        btnGerar.innerHTML = '<i class="fa-solid fa-bolt"></i> Varrer Pasta e Baixar index.html';
+        btnGerar.innerHTML = '<i class="fa-solid fa-bolt"></i> Varrer Repositório e Baixar index.html';
     }
 }
 
@@ -359,15 +407,16 @@ function atualizarPreview(arquivos) {
     const container = document.getElementById('previewContainer');
     container.innerHTML = `
         <div style="font-size: 0.85rem; color: #10b981; margin-bottom: 1rem; font-weight: 500;">
-            <i class="fa-solid fa-circle-check"></i> Sucesso! ${arquivos.length} arquivo(s) catalogado(s) automaticamente (index.html ignorado).
+            <i class="fa-solid fa-circle-check"></i> Sucesso! ${arquivos.length} arquivo(s) carregados quebrando o limite de 1000.
         </div>
         <ul class="file-list" style="max-height: 220px; overflow-y: auto;">
-            ${arquivos.map(a => `
+            ${arquivos.slice(0, 50).map(a => `
                 <li class="file-item">
-                    <span class="file-link"><i class="fa-regular fa-file-lines"></i> ${a.displayName}</span>
+                    <span class="file-link"><i class="fa-regular fa-file-lines"></i> ${a.fullName}</span>
                 </li>
             `).join('')}
         </ul>
+        ${arquivos.length > 50 ? `<div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem;">E mais ${arquivos.length - 50} arquivos na listagem completa...</div>` : ''}
     `;
 }
 
@@ -419,12 +468,12 @@ function gerarEBaixarArquivoHtml(arquivos) {
 <div class="container">
     <header>
         <h1>Catálogo de Arquivos</h1>
-        <p>Lista de arquivos disponíveis para acesso</p>
+        <p>Lista completa de arquivos disponíveis</p>
     </header>
     <div class="catalog-box">
         <div class="search-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" class="search-input" placeholder="Buscar arquivo por nome..." oninput="filtrarEExibir()">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar arquivo por nome ou caminho..." oninput="filtrarEExibir()">
         </div>
         <ul id="fileList" class="file-list"></ul>
         <div id="pagination" class="pagination"></div>
@@ -454,9 +503,9 @@ function renderizar() {
     itensPagina.forEach(arq => {
         const li = document.createElement('li');
         li.className = 'file-item';
-        li.innerHTML = \`<a href="\${arq.displayFileUrl}" \${arq.downloadAttr ? 'download="' + arq.fullName + '"' : 'target="_blank"'} class="file-link" title="\${arq.displayName}">
+        li.innerHTML = \`<a href="\${arq.displayFileUrl}" \${arq.downloadAttr ? 'download="' + arq.fullName.split('/').pop() + '"' : 'target="_blank"'} class="file-link" title="\${arq.fullName}">
             <i class="fa-regular fa-file-lines"></i>
-            <span>\${arq.displayName}</span>
+            <span>\${arq.fullName}</span>
         </a>\`;
         lista.appendChild(li);
     });
@@ -471,7 +520,6 @@ function renderizarPaginacao() {
 
     if (totalPaginas <= 1) return;
 
-    // Botão Anterior
     const btnAnterior = document.createElement('button');
     btnAnterior.className = 'page-btn';
     btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
@@ -479,7 +527,6 @@ function renderizarPaginacao() {
     btnAnterior.onclick = () => { if (paginaAtual > 1) { paginaAtual--; renderizar(); } };
     paginacaoDiv.appendChild(btnAnterior);
 
-    // Lógica de paginação compacta com reticências se houver muitas páginas
     let paginasParaMostrar = [];
     if (totalPaginas <= 10) {
         for (let i = 1; i <= totalPaginas; i++) paginasParaMostrar.push(i);
@@ -525,7 +572,6 @@ function renderizarPaginacao() {
         }
     });
 
-    // Botão Próximo
     const btnProximo = document.createElement('button');
     btnProximo.className = 'page-btn';
     btnProximo.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
@@ -536,7 +582,7 @@ function renderizarPaginacao() {
 
 function filtrarEExibir() {
     const termo = document.getElementById('searchInput').value.toLowerCase();
-    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    arquivosFiltrados = todosArquivos.filter(arq => arq.fullName.toLowerCase().includes(termo));
     paginaAtual = 1;
     renderizar();
 }
