@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Catálogo de Arquivos</title>
+    <!-- Google Fonts & FontAwesome para um visual limpo e profissional -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--text-main);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        label span {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5Rem;
+            cursor: pointer;
+            font-weight: 400;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .preview-section {
+            border-top: 2px dashed var(--border);
+            padding-top: 2rem;
+            margin-top: 2rem;
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Estilos embutidos para simular a página gerada */
+        .catalog-container {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        .catalog-search {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.2s;
+        }
+
+        .file-item:hover {
+            border-color: var(--primary);
+        }
+
+        .file-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .file-link i {
+            color: var(--primary);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Gerador de Catálogo</h1>
+        <p>Crie páginas de listagem limpas e profissionais para seus arquivos hospedados.</p>
+    </header>
+
+    <div class="card">
+        <form id="generatorForm" onsubmit="event.preventDefault(); gerarCatalogo();">
+            <div class="form-group">
+                <label for="sourceUrl">Link de Origem dos Arquivos <span>(Onde os arquivos estão fisicamente)</span></label>
+                <input type="text" id="sourceUrl" placeholder="Ex: https://raw.githubusercontent.com/usuario/repo/main/diretorio" required>
+                <div class="helper-text">URL base crua (raw) de onde o site buscará os arquivos para download.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="customDomain">Link Base de Exibição <span>(Opcional)</span></label>
+                <input type="text" id="customDomain" placeholder="Ex: https://repositorio.meusite.org/diretorio ou https://usuario.github.io/repo/dir">
+                <div class="helper-text">Se vazio, usará automaticamente o link de origem informado acima.</div>
+            </div>
+
+            <div class="form-group">
+                <label>Comportamento do Link</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="downloadMode" value="download" checked> Forçar Download
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="downloadMode" value="view"> Abrir / Visualizar no Navegador
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="fileNames">Lista de Arquivos <span>(Cole os nomes com extensões, um por linha)</span></label>
+                <textarea id="fileNames" placeholder="imagem1.jpg&#10;documento.pdf&#10;video_aula.mp4" required></textarea>
+            </div>
+
+            <button type="button" class="btn" onclick="gerarCatalogo()">
+                <i class="fa-solid fa-code"></i> Gerar e Baixar index.html
+            </button>
+        </form>
+    </div>
+
+    <div class="preview-section">
+        <div class="preview-title">
+            <i class="fa-solid fa-eye" style="color: var(--primary);"></i> Pré-visualização ao vivo
+        </div>
+        <div class="catalog-container" id="previewContainer">
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Preencha o formulário acima para visualizar o catálogo.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function processarDados() {
+    const sourceUrl = document.getElementById('sourceUrl').value.trim().replace(/\/+$/, '');
+    let customDomain = document.getElementById('customDomain').value.trim().replace(/\/+$/, '');
+    const baseLink = customDomain !== '' ? customDomain : sourceUrl;
+    const downloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
+    
+    const rawText = document.getElementById('fileNames').value;
+    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    const arquivos = lines.map(fullName => {
+        // Remove a extensão para exibição
+        const lastDotIndex = fullName.lastIndexOf('.');
+        const displayName = lastDotIndex !== -1 ? fullName.substring(0, lastDotIndex) : fullName;
+        
+        return {
+            fullName: fullName,
+            displayName: displayName,
+            sourceFileUrl: `${sourceUrl}/${encodeURIComponent(fullName)}`,
+            displayFileUrl: `${baseLink}/${encodeURIComponent(fullName)}`,
+            downloadAttr: downloadMode === 'download' ? 'download' : ''
+        };
+    });
+
+    return arquivos;
+}
+
+function gerarCatalogo() {
+    const arquivos = processarDados();
+    if (arquivos.length === 0) {
+        alert('Por favor, adicione pelo menos um arquivo na lista.');
+        return;
+    }
+
+    // Template HTML final que será embutido no arquivo index.html baixado
+    const htmlTemplate = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Arquivos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 2rem 1rem; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2rem; }
+        header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        header p { color: var(--text-muted); font-size: 0.9rem; }
+        .catalog-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .search-wrapper { position: relative; margin-bottom: 1.5rem; }
+        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .file-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; min-height: 200px; }
+        .file-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; transition: all 0.2s; }
+        .file-item:hover { border-color: var(--primary); background: #fff; transform: translateY(-1px); }
+        .file-link { color: var(--text-main); text-decoration: none; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; width: 100%; word-break: break-all; }
+        .file-link i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
+        .pagination { display: flex; justify-content: center; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+        .page-btn { padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: background 0.2s; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .no-results { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Catálogo de Arquivos</h1>
+        <p>Lista de arquivos disponíveis para acesso</p>
+    </header>
+    <div class="catalog-box">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar arquivo por nome..." oninput="filtrarEExibir()">
+        </div>
+        <ul id="fileList" class="file-list"></ul>
+        <div id="pagination" class="pagination"></div>
+    </div>
+</div>
+<script>
+const todosArquivos = ${JSON.stringify(arquivos)};
+const itensPorPagina = 30;
+let paginaAtual = 1;
+let arquivosFiltrados = [...todosArquivos];
+
+function renderizar() {
+    const lista = document.getElementById('fileList');
+    const paginacaoDiv = document.getElementById('pagination');
+    lista.innerHTML = '';
+
+    if (arquivosFiltrados.length === 0) {
+        lista.innerHTML = '<div class="no-results"><i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Nenhum arquivo encontrado.</div>';
+        paginacaoDiv.innerHTML = '';
+        return;
+    }
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const itensPagina = arquivosFiltrados.slice(inicio, fim);
+
+    itensPagina.forEach(arq => {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        li.innerHTML = \`<a href="\${arq.displayFileUrl}" \${arq.downloadAttr ? 'download="' + arq.fullName + '"' : 'target="_blank"'} class="file-link" title="\${arq.displayName}">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>\${arq.displayName}</span>
+        </a>\`;
+        lista.appendChild(li);
+    });
+
+    renderizarPaginacao();
+}
+
+function renderizarPaginacao() {
+    const paginacaoDiv = document.getElementById('pagination');
+    paginacaoDiv.innerHTML = '';
+    const totalPaginas = Math.ceil(arquivosFiltrados.length / itensPorPagina);
+
+    if (totalPaginas <= 1) return;
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.className = 'page-btn';
+    btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    btnAnterior.disabled = paginaAtual === 1;
+    btnAnterior.onclick = () => { if (paginaAtual > 1) { paginaAtual--; renderizar(); } };
+    paginacaoDiv.appendChild(btnAnterior);
+
+    for (let i = 1; i <= totalPaginas; i++) {
+        const btn = document.createElement('button');
+        btn.className = \`page-btn \${i === paginaAtual ? 'active' : ''}\`;
+        btn.innerText = i;
+        btn.onclick = () => { paginaAtual = i; renderizar(); };
+        paginacaoDiv.appendChild(btn.value = i, paginacaoDiv.appendChild(btn));
+    }
+
+    const btnProximo = document.createElement('button');
+    btnProximo.className = 'page-btn';
+    btnProximo.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    btnProximo.disabled = paginaAtual === totalPaginas;
+    btnProximo.onclick = () => { if (paginaAtual < totalPaginas) { paginaAtual++; renderizar(); } };
+    paginacaoDiv.appendChild(btnProximo);
+}
+
+function filtrarEExibir() {
+    const termo = document.getElementById('searchInput').value.toLowerCase();
+    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    paginaAtual = 1;
+    renderizar();
+}
+
+renderizar();
+<\/script>
+</body>
+</html>`;
+
+    // Cria o download automático do arquivo index.html gerado
+    const blob = new Blob([htmlTemplate], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Atualiza a pré-visualização em tempo real enquanto o usuário digita
+document.getElementById('generatorForm').addEventListener('input', () => {
+    try {
+        const arquivos = processarDados();
+        const container = document.getElementById('previewContainer');
+        if (arquivos.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Adicione arquivos para pré-visualizar.</p>';
+            return;
+        }
+        
+        // Renderiza uma pré-visualização simplificada no painel
+        container.innerHTML = `
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> \${arquivos.length} arquivo(s) mapeado(s) pronto(s) para gerar o <strong>index.html</strong>.
+            </div>
+            <ul class="file-list" style="max-height: 200px; overflow-y: auto;">
+                \${arquivos.slice(0, 5).map(a => \`
+                    <li class="file-item">
+                        <span class="file-link"><i class="fa-regular fa-file-lines"></i> \${a.displayName}</span>
+                    </li>
+                \`).join('')}
+                \${arquivos.length > 5 ? \`<li style="grid-column: 1/-1; text-align: center; font-size: 0.85rem; color: var(--text-muted);">...e mais \${arquivos.length - 5} arquivos.</li>\` : ''}
+            </ul>
+        `;
+    } catch(e) {}
+});
+</script>
+
+</body>
+</html>
